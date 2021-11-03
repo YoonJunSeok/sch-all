@@ -209,6 +209,7 @@ private:
 				curNode = curNode->leftNode;
 			else curNode = curNode->rightNode;
 		}
+		getNode = NULL;
 		return getNode;
 	}
 public:
