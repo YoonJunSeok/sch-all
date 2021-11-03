@@ -1,0 +1,324 @@
+#include <iostream>
+#include <string>
+#include <stack>
+using namespace std;
+enum class Color {
+	RED,
+	BLACK
+};
+class App {
+public:
+	int id;
+	string name;
+	int size;
+	int price;
+
+	App() {
+		this->id = NULL;
+		this->size = NULL;
+		this->price = NULL;
+	}
+
+	App(int id, string name, int size, int price) {
+		this->id = id;
+		this->name = name;
+		this->size = size;
+		this->price = price;
+	}
+};
+class Node {
+public:
+	App* app;
+	Node* leftNode;
+	Node* rightNode;
+	Node* parentNode;
+	Color color;
+
+	Node() {
+		this->app = NULL;
+		this->leftNode = NULL;
+		this->rightNode = NULL;
+		this->color = Color::BLACK;
+	}
+
+	Node(App* newApp) {
+		app = newApp;
+		this->leftNode = new Node();
+		this->rightNode = new Node();
+		this->color = Color::RED;
+	}
+};
+class RedblackTree {
+private:
+	Node* root;
+	
+	void GRR(Node* grandParent, Node* parent, Node* child) {
+		Node* saveLeft = parent->leftNode;
+		parent->leftNode = grandParent;
+		parent->parentNode = grandParent->parentNode;
+		grandParent->rightNode = saveLeft;
+		grandParent->parentNode = parent;
+		setSubtreeNodeColor(parent);
+		if (isRoot(parent)) setRoot(parent);
+		else setRootChildToSubtree(parent);
+	}
+	void GRL(Node* grandParent, Node* parent, Node* child) {
+		Node* saveLeft = child->leftNode;
+		Node* saveRight = child->rightNode;
+		// child가 부모 위치
+		child->leftNode = grandParent;
+		child->rightNode = parent;
+		child->parentNode = grandParent->parentNode;
+		// 왼쪽 자식의 오른쪽 자식은 child의 왼쪽 자식으로 대체.
+		saveLeft->parentNode = grandParent;
+ 		grandParent->rightNode = saveLeft;
+		grandParent->parentNode = child;
+		// 오른쪽 자식의 왼쪽 자식은 child의 오른쪽 자식으로 대체.
+		saveRight->parentNode = parent;
+		parent->leftNode = saveRight;
+		parent->parentNode = child;
+		setSubtreeNodeColor(child);
+		if (isRoot(child)) setRoot(child);
+		else setRootChildToSubtree(child);
+	}
+	void GLL(Node* grandParent, Node* parent, Node* child) {
+		Node* saveRight = parent->rightNode;
+		parent->rightNode = grandParent;
+		parent->parentNode = grandParent->parentNode;
+		grandParent->leftNode = saveRight;
+		grandParent->parentNode = parent;
+		setSubtreeNodeColor(parent);
+		if (isRoot(parent)) setRoot(parent);
+		else setRootChildToSubtree(parent);
+	}
+	void GLR(Node* grandParent, Node* parent, Node* child) {
+		Node* saveLeft = child->leftNode;
+		Node* saveRight = child->rightNode;
+		// child가 부모 위치
+		child->leftNode = parent;
+		child->rightNode = grandParent;
+		child->parentNode = grandParent->parentNode;
+		// 왼쪽 자식의 오른쪽 자식은 child의 왼쪽 자식으로 대체.
+		saveLeft->parentNode = parent;
+		parent->rightNode = saveLeft;
+		parent->parentNode = child;
+		// 오른쪽 자식의 왼쪽 자식은 child의 오른쪽 자식으로 대체.
+		saveRight->parentNode = grandParent;
+		grandParent->leftNode = saveRight;
+		grandParent->parentNode = child;
+		setSubtreeNodeColor(child);
+		if (isRoot(child)) setRoot(child);
+		else setRootChildToSubtree(child);
+	}
+	void leftRotation(Node* grandParent, Node* parent, Node* child) {
+		if (parent->rightNode == child) GRR(grandParent, parent, child);
+		else GRL(grandParent, parent, child);
+	}
+	void rightRotation(Node* grandParent, Node* parent, Node* child) {
+		if (parent->leftNode == child) GLL(grandParent, parent, child);
+		else GLR(grandParent, parent, child);
+	}
+	void recoloring(Node* grandParent, Node* parent, Node* sibling) {
+		if (isRoot(grandParent)) setRoot(grandParent);
+		else grandParent->color = Color::RED;
+		parent->color = Color::BLACK;
+		sibling->color = Color::BLACK;
+	}
+	void restructuring(Node* grandParent, Node* parent, Node* child) {
+		// GL
+		if (grandParent->leftNode == parent) rightRotation(grandParent, parent, child);
+		// GR
+		else leftRotation(grandParent, parent, child);
+	}
+	void setRootChildToSubtree(Node* subtreeRoot) {
+		if (subtreeRoot->parentNode->leftNode == subtreeRoot) subtreeRoot->parentNode->leftNode = subtreeRoot;
+		else subtreeRoot->parentNode->rightNode = subtreeRoot;
+	}
+	void setRoot(Node* node) {
+		root = node;
+		setRootColor();
+	}
+	void setRootColor() {
+		root->color = Color::BLACK;
+	}
+	void setSubtreeNodeColor(Node* subtree) {
+		subtree->color = Color::BLACK;
+		subtree->leftNode->color = Color::RED;
+		subtree->rightNode->color = Color::RED;
+	}
+	void saleApp(Node* curNode, int startId, int endId, int p) {
+		if (curNode->app != NULL) {
+			saleApp(curNode->leftNode, startId, endId, p);
+			if (curNode->app->id >= startId && curNode->app->id <= endId)
+				curNode->app->price = (curNode->app->price) * ((100 - p) / 100);
+			saleApp(curNode->rightNode, startId, endId, p);
+		}
+	}
+	int getNodeDepth(Node* node) {
+		int depth = 0;
+		// 해당 노드부터 루트로 올라갈 수 있다면 0에서부터 하나씩 더해준다.
+		while (node->parentNode != NULL) {
+			depth++;
+			node = node->parentNode;
+		}
+		return depth;
+	}
+	bool isRoot(Node* node) {
+		if (getNodeDepth(node) == 0) return true;
+		else return false;
+	}
+	bool isDoubleRed(Node* parentNode, Node* newNode) {
+		if (getNodeDepth(newNode) >= 2)
+			return (parentNode->color == Color::RED && newNode->color == Color::RED);
+		else return false;
+	}
+	bool isSiblingRed(Node* siblingNode) {
+		return (siblingNode->color == Color::RED);
+	}
+	Node* getSibling(Node* parentNode) {
+		Node* sibling = NULL;
+		if (parentNode->parentNode->leftNode == parentNode) {
+			sibling = parentNode->parentNode->rightNode;
+			sibling->parentNode = parentNode->parentNode;
+			return sibling;
+		}
+		else if (parentNode->parentNode->rightNode == parentNode) {
+			sibling = parentNode->parentNode->leftNode;
+			sibling->parentNode = parentNode->parentNode;
+			return sibling;
+		}
+	}
+	Node* getNodeUsing(int id) {
+		Node* curNode = root;
+		Node* getNode = NULL;
+		while (curNode->app != NULL) {
+			getNode = curNode;
+			if (curNode->app->id == id) return getNode;
+			else if (curNode->app->id > id)
+				curNode = curNode->leftNode;
+			else curNode = curNode->rightNode;
+		}
+		return getNode;
+	}
+public:
+	RedblackTree() {
+		this->root = NULL;
+	}
+
+	void insertAppInNode(App* app) {
+		Node* newNode = new Node(app);
+		Node* saveNewNode = newNode;
+		if (root == NULL) {
+			root = newNode;
+			setRootColor();
+		}
+		else {
+			Node* curNode = root;
+			// newNode를 집어넣을 parentNode
+			Node* toParentNode = curNode;
+			// newNode를 집어넣을 parentNode를 찾는다.
+			// Except NIL 
+			while (curNode->app != NULL) {
+				toParentNode = curNode;
+				if (curNode->app->id == newNode->app->id) break;
+				else if (newNode->app->id < curNode->app->id)
+					curNode = curNode->leftNode;
+				else {
+					curNode = curNode->rightNode;
+				}
+			}
+			// save new id smaller than parent Id 
+			if (toParentNode->app->id > newNode->app->id) {
+				toParentNode->leftNode = newNode;
+				newNode->parentNode = toParentNode;
+			}
+			// save new id larger than parent id
+			else {
+				toParentNode->rightNode = newNode;
+				newNode->parentNode = toParentNode;
+			}
+			// check double red
+			while (isDoubleRed(toParentNode, newNode)) {
+				// get sibling node
+				Node* siblingNode = getSibling(toParentNode);
+				if (isSiblingRed(siblingNode)) recoloring(toParentNode->parentNode, toParentNode, siblingNode);
+				else restructuring(toParentNode->parentNode, toParentNode, newNode);
+				// double red 처리 후에도 double red가 발생했는지 알기 위해 비교 노드를 바꿔준다.
+				// toParentNode = grandParentNode->parentNode
+				if (toParentNode->parentNode != NULL && toParentNode->parentNode->parentNode != NULL) {
+					Node* saveParentNode = toParentNode->parentNode;
+					toParentNode = getNodeUsing(toParentNode->parentNode->parentNode->app->id);
+					// newNode = grandParentNode
+					newNode = getNodeUsing(saveParentNode->app->id);
+				}
+			}
+		}
+		cout << getNodeDepth(saveNewNode) << "\n";
+	}
+	void printDepthAndAppInformationUsing(int id) {
+		Node* node = getNodeUsing(id);
+		if (node == NULL) cout << "NULL\n";
+		else if (node->app != NULL)
+			cout << getNodeDepth(node) << " " << node->app->name << " " << node->app->size << " " << node->app->price << "\n";
+	}
+	void updateAppInformation(App* app) {
+		Node* node = getNodeUsing(app->id);
+		if (node == NULL) cout << "NULL\n";
+		else if (node->app != NULL) {
+			node->app->name = app->name;
+			node->app->size = app->size;
+			node->app->price = app->price;
+			cout << getNodeDepth(node) << "\n";
+		}
+	}
+
+	void saleAppBetween(int startId, int endId, int p) {
+		if (root != NULL)
+			saleApp(root, startId, endId, p);
+	}
+	// print tree for test.
+// if finish project then delete it.
+	void inOrderPrint(Node* curNode) {
+		if (curNode->app != NULL) {
+			inOrderPrint(curNode->leftNode);
+			int color = curNode->color == Color::BLACK ? 0 : 1;
+			cout << "(" << curNode->app->id << ", " << color << ") ";
+			inOrderPrint(curNode->rightNode);
+		}
+	}
+	void inOrder() {
+		if (root != NULL)
+			inOrderPrint(root);
+		cout << "\n";
+	}
+};
+int main() {
+	int tc; cin >> tc;
+	RedblackTree rbt;
+	while (tc--) {
+		string cmd; cin >> cmd;
+		// 애플리케이션 등록
+		if (cmd == "I") {
+			int id, size, price; string name;
+			cin >> id >> name >> size >> price;
+			rbt.insertAppInNode(new App(id, name, size, price));
+			rbt.inOrder();
+		}
+		// 애플리케이션 검색
+		else if (cmd == "F") {
+			int id; cin >> id;
+			rbt.printDepthAndAppInformationUsing(id);
+		}
+		// 애플리케이션 업데이트
+		else if (cmd == "R") {
+			int id, size, price; string name;
+			cin >> id >> name >> size >> price;
+			rbt.updateAppInformation(new App(id, name, size, price));
+		}
+		// 애플리케이션 할인
+		else if (cmd == "D") {
+			int x, y, P; cin >> x >> y >> P;
+			rbt.saleAppBetween(x, y, P);
+		}
+	}
+}
