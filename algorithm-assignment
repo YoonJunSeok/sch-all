@@ -57,10 +57,11 @@ private:
 		parent->leftNode = grandParent;
 		parent->parentNode = grandParent->parentNode;
 		grandParent->rightNode = saveLeft;
+		saveLeft->parentNode = grandParent;
 		grandParent->parentNode = parent;
 		setSubtreeNodeColor(parent);
 		if (isRoot(parent)) setRoot(parent);
-		else setRootChildToSubtree(parent);
+		else setConnectRootToSubtree(parent);
 	}
 	void GRL(Node* grandParent, Node* parent, Node* child) {
 		Node* saveLeft = child->leftNode;
@@ -79,17 +80,18 @@ private:
 		parent->parentNode = child;
 		setSubtreeNodeColor(child);
 		if (isRoot(child)) setRoot(child);
-		else setRootChildToSubtree(child);
+		else setConnectRootToSubtree(child);
 	}
 	void GLL(Node* grandParent, Node* parent, Node* child) {
 		Node* saveRight = parent->rightNode;
 		parent->rightNode = grandParent;
 		parent->parentNode = grandParent->parentNode;
 		grandParent->leftNode = saveRight;
+		saveRight->parentNode = grandParent;
 		grandParent->parentNode = parent;
 		setSubtreeNodeColor(parent);
 		if (isRoot(parent)) setRoot(parent);
-		else setRootChildToSubtree(parent);
+		else setConnectRootToSubtree(parent);
 	}
 	void GLR(Node* grandParent, Node* parent, Node* child) {
 		Node* saveLeft = child->leftNode;
@@ -108,7 +110,7 @@ private:
 		grandParent->parentNode = child;
 		setSubtreeNodeColor(child);
 		if (isRoot(child)) setRoot(child);
-		else setRootChildToSubtree(child);
+		else setConnectRootToSubtree(child);
 	}
 	void leftRotation(Node* grandParent, Node* parent, Node* child) {
 		if (parent->rightNode == child) GRR(grandParent, parent, child);
@@ -130,7 +132,7 @@ private:
 		// GR
 		else leftRotation(grandParent, parent, child);
 	}
-	void setRootChildToSubtree(Node* subtreeRoot) {
+	void setConnectRootToSubtree(Node* subtreeRoot) {
 		if (subtreeRoot->parentNode->leftNode == subtreeRoot) subtreeRoot->parentNode->leftNode = subtreeRoot;
 		else subtreeRoot->parentNode->rightNode = subtreeRoot;
 	}
@@ -208,6 +210,7 @@ public:
 	void insertAppInNode(App* app) {
 		Node* newNode = new Node(app);
 		Node* saveNewNode = newNode;
+		bool isDuplicate = false;
 		if (root == NULL) {
 			root = newNode;
 			setRootColor();
@@ -220,7 +223,11 @@ public:
 			// Except NIL 
 			while (curNode->app != NULL) {
 				toParentNode = curNode;
-				if (curNode->app->id == newNode->app->id) break;
+				if (curNode->app->id == newNode->app->id) {
+					cout << "duplicated" << "\n";
+					isDuplicate = true;
+					break;
+				}
 				else if (newNode->app->id < curNode->app->id)
 					curNode = curNode->leftNode;
 				else {
@@ -238,7 +245,7 @@ public:
 				newNode->parentNode = toParentNode;
 			}
 			// check double red
-			while (isDoubleRed(toParentNode, newNode)) {
+			while (isDoubleRed(toParentNode, newNode) && !isDuplicate) {
 				// get sibling node
 				Node* siblingNode = getSibling(toParentNode);
 				if (isSiblingRed(siblingNode)) recoloring(toParentNode->parentNode, toParentNode, siblingNode);
