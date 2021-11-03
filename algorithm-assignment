@@ -66,6 +66,10 @@ private:
 	void GRL(Node* grandParent, Node* parent, Node* child) {
 		Node* saveLeft = child->leftNode;
 		Node* saveRight = child->rightNode;
+		if (grandParent->parentNode != NULL) {
+			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = child;
+			else grandParent->parentNode->rightNode = child;
+		}
 		// child가 부모 위치
 		child->leftNode = grandParent;
 		child->rightNode = parent;
@@ -96,6 +100,10 @@ private:
 	void GLR(Node* grandParent, Node* parent, Node* child) {
 		Node* saveLeft = child->leftNode;
 		Node* saveRight = child->rightNode;
+		if (grandParent->parentNode != NULL) {
+			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = child;
+			else grandParent->parentNode->rightNode = child;
+		}
 		// child가 부모 위치
 		child->leftNode = parent;
 		child->rightNode = grandParent;
@@ -143,6 +151,7 @@ private:
 	void setRootColor() {
 		root->color = Color::BLACK;
 	}
+	// restructuring 한 subtree node color를 변경.
 	void setSubtreeNodeColor(Node* subtree) {
 		subtree->color = Color::BLACK;
 		subtree->leftNode->color = Color::RED;
