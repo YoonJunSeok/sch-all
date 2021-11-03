@@ -161,7 +161,7 @@ private:
 		if (curNode->app != NULL) {
 			saleApp(curNode->leftNode, startId, endId, p);
 			if (curNode->app->id >= startId && curNode->app->id <= endId)
-				curNode->app->price = (curNode->app->price) * ((100 - p) / 100);
+				curNode->app->price = ((curNode->app->price) * (100 - p)) / 100;
 			saleApp(curNode->rightNode, startId, endId, p);
 		}
 	}
