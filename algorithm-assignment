@@ -56,8 +56,12 @@ private:
 		Node* saveLeft = parent->leftNode;
 		parent->leftNode = grandParent;
 		parent->parentNode = grandParent->parentNode;
-		grandParent->rightNode = saveLeft;
+		if (grandParent->parentNode != NULL) {
+			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = parent;
+			else grandParent->parentNode->rightNode = parent;
+		}
 		saveLeft->parentNode = grandParent;
+		grandParent->rightNode = saveLeft;
 		grandParent->parentNode = parent;
 		setSubtreeNodeColor(parent);
 		if (isRoot(parent)) setRoot(parent);
@@ -90,8 +94,12 @@ private:
 		Node* saveRight = parent->rightNode;
 		parent->rightNode = grandParent;
 		parent->parentNode = grandParent->parentNode;
-		grandParent->leftNode = saveRight;
+		if (grandParent->parentNode != NULL) {
+			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = parent;
+			else grandParent->parentNode->rightNode = parent;
+		}
 		saveRight->parentNode = grandParent;
+		grandParent->leftNode = saveRight;
 		grandParent->parentNode = parent;
 		setSubtreeNodeColor(parent);
 		if (isRoot(parent)) setRoot(parent);
@@ -129,8 +137,7 @@ private:
 		else GLR(grandParent, parent, child);
 	}
 	void recoloring(Node* grandParent, Node* parent, Node* sibling) {
-		if (isRoot(grandParent)) setRoot(grandParent);
-		else grandParent->color = Color::RED;
+		if (!isRoot(grandParent)) grandParent->color = Color::RED;
 		parent->color = Color::BLACK;
 		sibling->color = Color::BLACK;
 	}
@@ -141,8 +148,9 @@ private:
 		else leftRotation(grandParent, parent, child);
 	}
 	void setConnectRootToSubtree(Node* subtreeRoot) {
-		if (subtreeRoot->parentNode->leftNode == subtreeRoot) subtreeRoot->parentNode->leftNode = subtreeRoot;
-		else subtreeRoot->parentNode->rightNode = subtreeRoot;
+		Node* subtreeParentNode = subtreeRoot->parentNode;
+		if (subtreeParentNode->leftNode->app->id == subtreeRoot->app->id) subtreeParentNode->leftNode = subtreeRoot;
+		else if (subtreeParentNode->rightNode->app->id == subtreeRoot->app->id) subtreeParentNode->rightNode = subtreeRoot;
 	}
 	void setRoot(Node* node) {
 		root = node;
@@ -168,7 +176,7 @@ private:
 	int getNodeDepth(Node* node) {
 		int depth = 0;
 		// 해당 노드부터 루트로 올라갈 수 있다면 0에서부터 하나씩 더해준다.
-		while (node->parentNode != NULL) {
+		while (node != NULL && node->parentNode != NULL) {
 			depth++;
 			node = node->parentNode;
 		}
@@ -255,18 +263,18 @@ public:
 				newNode->parentNode = toParentNode;
 			}
 			// check double red
+			// depth >= 2, parent & new == RED
 			while (isDoubleRed(toParentNode, newNode) && !isDuplicate) {
 				// get sibling node
 				Node* siblingNode = getSibling(toParentNode);
 				if (isSiblingRed(siblingNode)) recoloring(toParentNode->parentNode, toParentNode, siblingNode);
 				else restructuring(toParentNode->parentNode, toParentNode, newNode);
 				// double red 처리 후에도 double red가 발생했는지 알기 위해 비교 노드를 바꿔준다.
-				// toParentNode = grandParentNode->parentNode
-				if (toParentNode->parentNode != NULL && toParentNode->parentNode->parentNode != NULL) {
-					Node* saveParentNode = toParentNode->parentNode;
-					toParentNode = getNodeUsing(toParentNode->parentNode->parentNode->app->id);
+				if (getNodeDepth(toParentNode->parentNode) >= 2) {
 					// newNode = grandParentNode
-					newNode = getNodeUsing(saveParentNode->app->id);
+					newNode = getNodeUsing(toParentNode->parentNode->app->id);
+					// toParentNode = grandParentNode parent
+					toParentNode = getNodeUsing(toParentNode->parentNode->parentNode->app->id);
 				}
 			}
 		}
@@ -319,7 +327,6 @@ int main() {
 			int id, size, price; string name;
 			cin >> id >> name >> size >> price;
 			rbt.insertAppInNode(new App(id, name, size, price));
-			rbt.inOrder();
 		}
 		// 애플리케이션 검색
 		else if (cmd == "F") {
