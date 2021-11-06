@@ -217,8 +217,8 @@ private:
 		if (curNode != NULL && curNode->app != NULL) {
 			discountApp(curNode->leftNode, startId, endId, p);
 			if (curNode->app->id >= startId && curNode->app->id <= endId) {
-				double discount = ((curNode->app->price) * ((double)100 - p) / (double)100);
-				curNode->app->price = (int)floor(discount);
+				double originalPrice = (double)(curNode->app->price);
+				curNode->app->price = (int)floor(originalPrice * ((((double)100 - p) / (double)100)));
 			}
 			discountApp(curNode->rightNode, startId, endId, p);
 		}
