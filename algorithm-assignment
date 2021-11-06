@@ -47,25 +47,82 @@ class RedblackTree {
 private:
 	Node* root;
 	
+	// Restructuring
+	Node* getSubtreeRootAfterRestructuring(Node* grandParent, Node* parent, Node* child) {
+		if (grandParent->leftNode == parent)
+			// Rotation for the following format.
+			//		grandParent 
+			//			/
+			//		parent
+			return getSubtreeRootAfterRightRotation(grandParent, parent, child);
+		else
+			// Rotation for the following format.
+			// grandParent 
+			//		＼
+			//		parent
+			return getSubtreeRootAfterLeftRotation(grandParent, parent, child);
+	}
+
+	Node* getSubtreeRootAfterLeftRotation(Node* grandParent, Node* parent, Node* child) {
+		if (parent->rightNode == child)
+			// Rotation for the following format.
+			// grandParent 
+			//		＼
+			//		parent
+			//			＼
+			//			child
+			return getSubtreeRootAfterGRR(grandParent, parent, child);
+		else
+			// Rotation for the following format.
+			// grandParent 
+			//		＼
+			//		parent
+			//		 /
+			//	  child
+			return getSubtreeRootAfterGRL(grandParent, parent, child);
+	}
+	Node* getSubtreeRootAfterRightRotation(Node* grandParent, Node* parent, Node* child) {
+		if (parent->leftNode == child)
+			// Rotation for the following format.
+			//		grandParent 
+			//			/
+			//		parent
+			//		 /
+			//	  child
+			return getSubtreeRootAfterGLL(grandParent, parent, child);
+		else
+			// Rotation for the following format.
+			//		grandParent 
+			//			/
+			//		parent
+			//			＼
+			//			child
+			return getSubtreeRootAfterGLR(grandParent, parent, child);
+	}
+
 	Node* getSubtreeRootAfterGRR(Node* grandParent, Node* parent, Node* child) {
 		Node* subtreeRootNode = parent;
 		Node* saveLeft = parent->leftNode;
 		// set subtree root
 		if (!isRoot(grandParent)) {
+			// subtree의 부모는 기존 tree.
 			subtreeRootNode->parentNode = grandParent->parentNode;
-			// tree의 자식으로 subtree 설정.
+			// 기존 tree의 자식으로 subtree 설정.
 			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = subtreeRootNode;
 			else if (grandParent->parentNode->rightNode == grandParent) grandParent->parentNode->rightNode = subtreeRootNode;
 		}
 		else {
+			// subtree를 root로 설정.
 			subtreeRootNode->parentNode = NULL;
 			root = subtreeRootNode;
 		}
-		subtreeRootNode->leftNode = grandParent;
 		// set subtree left child.
+		subtreeRootNode->leftNode = grandParent;
 		grandParent->parentNode = subtreeRootNode;
+		// set subtree left child's child
 		saveLeft->parentNode = grandParent;
 		grandParent->rightNode = saveLeft;
+		// restructuring 후에 노드들의 색 변환.
 		setSubtreeNodeColor(subtreeRootNode);
 		return subtreeRootNode;
 	}
@@ -75,25 +132,31 @@ private:
 		Node* saveLeft = child->leftNode;
 		Node* saveRight = child->rightNode;
 		if (!isRoot(grandParent)) {
+			// subtree의 부모는 기존 tree.
 			subtreeRootNode->parentNode = grandParent->parentNode;
-			// tree의 자식으로 subtree 설정.
+			// 기존 tree의 자식으로 subtree 설정.
 			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = subtreeRootNode;
 			else if (grandParent->parentNode->rightNode == grandParent) grandParent->parentNode->rightNode = subtreeRootNode;
 		}
 		else {
+			// subtree를 root로 설정.
 			subtreeRootNode->parentNode = NULL;
 			root = subtreeRootNode;
 		}
+		// set subtree left, right child.
 		subtreeRootNode->leftNode = grandParent;
 		subtreeRootNode->rightNode = parent;
 		// set subtree left child.
 		grandParent->parentNode = subtreeRootNode;
+		// set subtree left child's child.
 		saveLeft->parentNode = grandParent;
 		grandParent->rightNode = saveLeft;
 		// set subtree right child.
 		parent->parentNode = subtreeRootNode;
+		// set subtree right child's child.
 		saveRight->parentNode = parent;
 		parent->leftNode = saveRight;
+		// restructuring 후에 노드들의 색 변환.
 		setSubtreeNodeColor(subtreeRootNode);
 		return subtreeRootNode;
 	}
@@ -101,22 +164,25 @@ private:
 	Node* getSubtreeRootAfterGLL(Node* grandParent, Node* parent, Node* child) {
 		Node* subtreeRootNode = parent;
 		Node* saveRight = parent->rightNode;
-		// set subtree root
 		if (!isRoot(grandParent)) {
+			// subtree의 부모는 기존 tree.
 			subtreeRootNode->parentNode = grandParent->parentNode;
-			// tree의 자식으로 subtree 설정.
+			// 기존 tree의 자식으로 subtree 설정.
 			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = subtreeRootNode;
 			else if (grandParent->parentNode->rightNode == grandParent) grandParent->parentNode->rightNode = subtreeRootNode;
 		}
 		else {
+			// subtree를 root로 설정.
 			subtreeRootNode->parentNode = NULL;
 			root = subtreeRootNode;
 		}
+		// set subtree right child.
 		subtreeRootNode->rightNode = grandParent;
-		// set subtree left child.
 		grandParent->parentNode = subtreeRootNode;
+		// set subtree right child's child
 		saveRight->parentNode = grandParent;
 		grandParent->leftNode = saveRight;
+		// restructuring 후에 노드들의 색 변환.
 		setSubtreeNodeColor(subtreeRootNode);
 		return subtreeRootNode;
 	}
@@ -132,72 +198,29 @@ private:
 			else if (grandParent->parentNode->rightNode == grandParent) grandParent->parentNode->rightNode = subtreeRootNode;
 		}
 		else {
+			// subtree를 root로 설정.
 			subtreeRootNode->parentNode = NULL;
 			root = subtreeRootNode;
 		}
+		// set subtree left, right child.
 		subtreeRootNode->leftNode = parent;
 		subtreeRootNode->rightNode = grandParent;
 		// set subtree left child.
 		parent->parentNode = subtreeRootNode;
+		// set subtree left child's child.
 		saveLeft->parentNode = parent;
 		parent->rightNode = saveLeft;
 		// set subtree right child.
 		grandParent->parentNode = subtreeRootNode;
+		// set subtree right child's child.
 		saveRight->parentNode = grandParent;
 		grandParent->leftNode = saveRight;
+		// restructuring 후에 노드들의 색 변환.
 		setSubtreeNodeColor(subtreeRootNode);
 		return subtreeRootNode;
 	}
-	Node* getSubtreeRootAfterLeftRotation(Node* grandParent, Node* parent, Node* child) {
-		if (parent->rightNode == child) 
-			// Rotation for the following format.
-			// grandParent 
-			//		＼
-			//		parent
-			//			＼
-			//			child
-			return getSubtreeRootAfterGRR(grandParent, parent, child);
-		else 
-			// Rotation for the following format.
-			// grandParent 
-			//		＼
-			//		parent
-			//		 /
-			//	  child
-			return getSubtreeRootAfterGRL(grandParent, parent, child);
-	}
-	Node* getSubtreeRootAfterRightRotation(Node* grandParent, Node* parent, Node* child) {
-		if (parent->leftNode == child) 
-			// Rotation for the following format.
-			//		grandParent 
-			//			/
-			//		parent
-			//		 /
-			//	  child
-			return getSubtreeRootAfterGLL(grandParent, parent, child);
-		else 
-			// Rotation for the following format.
-			//		grandParent 
-			//			/
-			//		parent
-			//			＼
-			//			child
-			return getSubtreeRootAfterGLR(grandParent, parent, child);
-	}
-	Node*  getSubtreeRootAfterRestructuring(Node* grandParent, Node* parent, Node* child) {
-		if (grandParent->leftNode == parent) 
-			// Rotation for the following format.
-			//		grandParent 
-			//			/
-			//		parent
-			return getSubtreeRootAfterRightRotation(grandParent, parent, child);
-		else 
-			// Rotation for the following format.
-			// grandParent 
-			//		＼
-			//		parent
-			return getSubtreeRootAfterLeftRotation(grandParent, parent, child);
-	}
+
+	// Recoloring.
 	Node* getSubtreeRootAfterRecoloring(Node* grandParent, Node* parent, Node* sibling) {
 		if (!isRoot(grandParent)) grandParent->color = Color::RED;
 		else grandParent->color = Color::BLACK;
@@ -249,7 +272,7 @@ private:
 		else if (siblingNode->color == Color::BLACK) return false;
 		return false;
 	}
-	// 부모의 형제 노드를 리턴.
+	// 부모의 형제 노드를 리턴. 없으면 NULL 리턴.
 	Node* getSibling(Node* parentNode) {
 		Node* sibling = NULL;
 		// grandparent의 왼쪽 자식이 부모노드일 경우. 형제는 오른쪽 자식.
@@ -266,7 +289,7 @@ private:
 		}
 		return sibling;
 	}
-	// 해당 id와 동일한 id를 가진 노드를 리턴.
+	// 해당 id와 동일한 id를 가진 노드를 리턴. 없으면 NULL 리턴.
 	Node* getNodeUsing(int id) {
 		Node* curNode = root;
 		Node* getNode = NULL;
@@ -296,16 +319,17 @@ public:
 			newNode->parentNode = NULL;
 			root = newNode;
 			root->color = Color::BLACK;
+			cout << getNodeDepth(newNode) << "\n";
 		}
 		else {
 			Node* curNode = root;
 			// newNode를 집어넣을 parentNode
 			Node* toParentNode = curNode;
 			// newNode를 집어넣을 parentNode를 찾는다.
-			// Except NIL 
 			while (curNode != NULL && curNode->app != NULL) {
 				toParentNode = curNode;
 				if (curNode->app->id == newNode->app->id) {
+					cout << getNodeDepth(curNode) << "\n";
 					isDuplicate = true;
 					break;
 				}
@@ -315,6 +339,7 @@ public:
 					curNode = curNode->rightNode;
 				}
 			}
+			// 중복된 id가 아닌 경우.
 			if (!isDuplicate) {
 				// save new id smaller than parent Id 
 				if (toParentNode->app->id > newNode->app->id) {
@@ -331,6 +356,7 @@ public:
 					// get sibling node
 					Node* siblingNode = getSibling(toParentNode);
 					Node* subtreeRoot = nullptr;
+					// sibling 노드의 색에 따라 다른 연산 수행.
 					if (isSiblingRed(siblingNode))
 						subtreeRoot = getSubtreeRootAfterRecoloring(toParentNode->parentNode, toParentNode, siblingNode);
 					else
@@ -343,11 +369,11 @@ public:
 						toParentNode = subtreeRoot->parentNode;
 					}
 				}
+				cout << getNodeDepth(saveNewNode) << "\n";
 			}
 		}
-		cout << getNodeDepth(saveNewNode) << "\n";
 	}
-	// 해당 id를 가진 노드의 깊의와 App 정보를 출력.
+	// 해당 id를 가진 노드의 깊이와 App 정보를 출력.
 	void printDepthAndAppInformationUsing(int id) {
 		Node* node = getNodeUsing(id);
 		if (node == NULL) cout << "NULL\n";
@@ -370,21 +396,6 @@ public:
 		if (root != NULL)
 			discountApp(root, startId, endId, p);
 	}
-
-	// print tree for test.
-	// if finish project then delete it.
-	void inOrderPrint(Node* curNode) {
-		if (curNode->app != NULL) {
-			inOrderPrint(curNode->leftNode);
-			int color = curNode->color == Color::BLACK ? 0 : 1;
-			cout << "(" << curNode->app->id << ", " << color << ") ";
-			inOrderPrint(curNode->rightNode);
-		}
-	}
-	void inOrder() {
-		inOrderPrint(root);
-		cout << "\n";
-	}
 };
 int main() {
 	int tc; cin >> tc;
@@ -396,7 +407,6 @@ int main() {
 			int id, size, price; string name;
 			cin >> id >> name >> size >> price;
 			rbt.insertAppInNode(new App(id, name, size, price));
-			//rbt.inOrder();
 		}
 		// 애플리케이션 검색
 		else if (cmd == "F") {
