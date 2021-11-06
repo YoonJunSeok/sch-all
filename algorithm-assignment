@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include <stack>
+#include <cmath>
 using namespace std;
 enum class Color {
 	RED,
@@ -12,12 +12,6 @@ public:
 	string name;
 	int size;
 	int price;
-
-	App() {
-		this->id = NULL;
-		this->size = NULL;
-		this->price = NULL;
-	}
 
 	App(int id, string name, int size, int price) {
 		this->id = id;
@@ -38,6 +32,7 @@ public:
 		this->app = NULL;
 		this->leftNode = NULL;
 		this->rightNode = NULL;
+		this->parentNode = NULL;
 		this->color = Color::BLACK;
 	}
 
@@ -52,13 +47,13 @@ class RedblackTree {
 private:
 	Node* root;
 	
-	void GRR(Node* grandParent, Node* parent, Node* child) {
+	Node* getSubtreeRootAfterGRR(Node* grandParent, Node* parent, Node* child) {
 		Node* subtreeRootNode = parent;
 		Node* saveLeft = parent->leftNode;
 		// set subtree root
 		if (!isRoot(grandParent)) {
 			subtreeRootNode->parentNode = grandParent->parentNode;
-			// grandParent 자식 설정.
+			// tree의 자식으로 subtree 설정.
 			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = subtreeRootNode;
 			else if (grandParent->parentNode->rightNode == grandParent) grandParent->parentNode->rightNode = subtreeRootNode;
 		}
@@ -67,23 +62,21 @@ private:
 			root = subtreeRootNode;
 		}
 		subtreeRootNode->leftNode = grandParent;
-		subtreeRootNode->rightNode = child;
 		// set subtree left child.
 		grandParent->parentNode = subtreeRootNode;
 		saveLeft->parentNode = grandParent;
 		grandParent->rightNode = saveLeft;
-		// set subtree right child.
-		child->parentNode = subtreeRootNode;
 		setSubtreeNodeColor(subtreeRootNode);
+		return subtreeRootNode;
 	}
 
-	void GRL(Node* grandParent, Node* parent, Node* child) {
+	Node* getSubtreeRootAfterGRL(Node* grandParent, Node* parent, Node* child) {
 		Node* subtreeRootNode = child;
 		Node* saveLeft = child->leftNode;
 		Node* saveRight = child->rightNode;
 		if (!isRoot(grandParent)) {
 			subtreeRootNode->parentNode = grandParent->parentNode;
-			// grandParent 자식 설정.
+			// tree의 자식으로 subtree 설정.
 			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = subtreeRootNode;
 			else if (grandParent->parentNode->rightNode == grandParent) grandParent->parentNode->rightNode = subtreeRootNode;
 		}
@@ -102,41 +95,39 @@ private:
 		saveRight->parentNode = parent;
 		parent->leftNode = saveRight;
 		setSubtreeNodeColor(subtreeRootNode);
+		return subtreeRootNode;
 	}
 
-	void GLL(Node* grandParent, Node* parent, Node* child) {
+	Node* getSubtreeRootAfterGLL(Node* grandParent, Node* parent, Node* child) {
 		Node* subtreeRootNode = parent;
 		Node* saveRight = parent->rightNode;
 		// set subtree root
 		if (!isRoot(grandParent)) {
 			subtreeRootNode->parentNode = grandParent->parentNode;
-			// grandParent 자식 설정.
+			// tree의 자식으로 subtree 설정.
 			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = subtreeRootNode;
 			else if (grandParent->parentNode->rightNode == grandParent) grandParent->parentNode->rightNode = subtreeRootNode;
-
 		}
 		else {
 			subtreeRootNode->parentNode = NULL;
 			root = subtreeRootNode;
 		}
 		subtreeRootNode->rightNode = grandParent;
-		subtreeRootNode->leftNode = child;
 		// set subtree left child.
 		grandParent->parentNode = subtreeRootNode;
 		saveRight->parentNode = grandParent;
 		grandParent->leftNode = saveRight;
-		// set subtree right child.
-		child->parentNode = subtreeRootNode;
 		setSubtreeNodeColor(subtreeRootNode);
+		return subtreeRootNode;
 	}
 
-	void GLR(Node* grandParent, Node* parent, Node* child) {
+	Node* getSubtreeRootAfterGLR(Node* grandParent, Node* parent, Node* child) {
 		Node* subtreeRootNode = child;
 		Node* saveLeft = child->leftNode;
 		Node* saveRight = child->rightNode;
 		if (!isRoot(grandParent)) {
 			subtreeRootNode->parentNode = grandParent->parentNode;
-			// grandParent 자식 설정.
+			// tree의 자식으로 subtree 설정.
 			if (grandParent->parentNode->leftNode == grandParent) grandParent->parentNode->leftNode = subtreeRootNode;
 			else if (grandParent->parentNode->rightNode == grandParent) grandParent->parentNode->rightNode = subtreeRootNode;
 		}
@@ -147,16 +138,17 @@ private:
 		subtreeRootNode->leftNode = parent;
 		subtreeRootNode->rightNode = grandParent;
 		// set subtree left child.
-		grandParent->parentNode = subtreeRootNode;
-		saveRight->parentNode = grandParent;
-		grandParent->leftNode = saveRight;
-		// set subtree right child.
 		parent->parentNode = subtreeRootNode;
 		saveLeft->parentNode = parent;
 		parent->rightNode = saveLeft;
+		// set subtree right child.
+		grandParent->parentNode = subtreeRootNode;
+		saveRight->parentNode = grandParent;
+		grandParent->leftNode = saveRight;
 		setSubtreeNodeColor(subtreeRootNode);
+		return subtreeRootNode;
 	}
-	void leftRotation(Node* grandParent, Node* parent, Node* child) {
+	Node* getSubtreeRootAfterLeftRotation(Node* grandParent, Node* parent, Node* child) {
 		if (parent->rightNode == child) 
 			// Rotation for the following format.
 			// grandParent 
@@ -164,17 +156,17 @@ private:
 			//		parent
 			//			＼
 			//			child
-			GRR(grandParent, parent, child);
-		else if (parent->leftNode == child)
+			return getSubtreeRootAfterGRR(grandParent, parent, child);
+		else 
 			// Rotation for the following format.
 			// grandParent 
 			//		＼
 			//		parent
 			//		 /
 			//	  child
-			GRL(grandParent, parent, child);
+			return getSubtreeRootAfterGRL(grandParent, parent, child);
 	}
-	void rightRotation(Node* grandParent, Node* parent, Node* child) {
+	Node* getSubtreeRootAfterRightRotation(Node* grandParent, Node* parent, Node* child) {
 		if (parent->leftNode == child) 
 			// Rotation for the following format.
 			//		grandParent 
@@ -182,57 +174,52 @@ private:
 			//		parent
 			//		 /
 			//	  child
-			GLL(grandParent, parent, child);
-		else if (parent->rightNode == child)
+			return getSubtreeRootAfterGLL(grandParent, parent, child);
+		else 
 			// Rotation for the following format.
 			//		grandParent 
 			//			/
 			//		parent
 			//			＼
 			//			child
-			GLR(grandParent, parent, child);
+			return getSubtreeRootAfterGLR(grandParent, parent, child);
 	}
-	void recoloring(Node* grandParent, Node* parent, Node* sibling) {
-		if (!isRoot(grandParent)) grandParent->color = Color::RED;
-		parent->color = Color::BLACK;
-		sibling->color = Color::BLACK;
-	}
-	void restructuring(Node* grandParent, Node* parent, Node* child) {
+	Node*  getSubtreeRootAfterRestructuring(Node* grandParent, Node* parent, Node* child) {
 		if (grandParent->leftNode == parent) 
 			// Rotation for the following format.
 			//		grandParent 
 			//			/
 			//		parent
-			rightRotation(grandParent, parent, child);
-		else if (grandParent->rightNode == parent)
+			return getSubtreeRootAfterRightRotation(grandParent, parent, child);
+		else 
 			// Rotation for the following format.
 			// grandParent 
 			//		＼
 			//		parent
-			leftRotation(grandParent, parent, child);
+			return getSubtreeRootAfterLeftRotation(grandParent, parent, child);
+	}
+	Node* getSubtreeRootAfterRecoloring(Node* grandParent, Node* parent, Node* sibling) {
+		if (!isRoot(grandParent)) grandParent->color = Color::RED;
+		else grandParent->color = Color::BLACK;
+		parent->color = Color::BLACK;
+		sibling->color = Color::BLACK;
+		return grandParent;
 	}
 
-	// 해당 노드를 루트로 설정.
-	void setRoot(Node* node) {
-		root = node;
-		setRootColor();
-	}
-	// 루트노드의 색을 BLACK으로 설정.
-	void setRootColor() {
-		root->color = Color::BLACK;
-	}
 	// restructuring 한 subtree 노드의 색을 변경.
-	void setSubtreeNodeColor(Node* subtree) {
-		subtree->color = Color::BLACK;
-		subtree->leftNode->color = Color::RED;
-		subtree->rightNode->color = Color::RED;
+	void setSubtreeNodeColor(Node* subtreeRoot) {
+		subtreeRoot->color = Color::BLACK;
+		subtreeRoot->leftNode->color = Color::RED;
+		subtreeRoot->rightNode->color = Color::RED;
 	}
 	// 중위순회를 수행하면서 범위에 해당하는 app들의 가격을 할인.
-	void discountApp(Node* curNode, int startId, int endId, int p) {
-		if (curNode->app != NULL) {
+	void discountApp(Node* curNode, int startId, int endId, double p) {
+		if (curNode != NULL && curNode->app != NULL) {
 			discountApp(curNode->leftNode, startId, endId, p);
-			if (curNode->app->id >= startId && curNode->app->id <= endId)
-				curNode->app->price = ((curNode->app->price) * (100 - p)) / 100;
+			if (curNode->app->id >= startId && curNode->app->id <= endId) {
+				double discount = ((curNode->app->price) * ((double)100 - p) / (double)100);
+				curNode->app->price = (int)floor(discount);
+			}
 			discountApp(curNode->rightNode, startId, endId, p);
 		}
 	}
@@ -240,7 +227,7 @@ private:
 	int getNodeDepth(Node* node) {
 		int depth = 0;
 		// 해당 노드부터 위로 올라갈때마다 +1.
-		while (node != NULL && node->parentNode != NULL) {
+		while (node != NULL && node != root) {
 			depth++;
 			node = node->parentNode;
 		}
@@ -253,26 +240,29 @@ private:
 	}
 	// 부모와 자식 노드의 색이 모두 RED인지 판별.
 	bool isDoubleRed(Node* parentNode, Node* newNode) {
-		if (getNodeDepth(newNode) >= 2)
-			return (parentNode->color == Color::RED && newNode->color == Color::RED);
+		if (parentNode->color == Color::RED && newNode->color == Color::RED) return true;
 		else return false;
 	}
 	// sibling 노드의 색이 RED인지 판별.
 	bool isSiblingRed(Node* siblingNode) {
-		return (siblingNode->color == Color::RED);
+		if (siblingNode->color == Color::RED) return true;
+		else if (siblingNode->color == Color::BLACK) return false;
+		return false;
 	}
 	// 부모의 형제 노드를 리턴.
 	Node* getSibling(Node* parentNode) {
 		Node* sibling = NULL;
 		// grandparent의 왼쪽 자식이 부모노드일 경우. 형제는 오른쪽 자식.
-		if (parentNode->parentNode->leftNode == parentNode) {
+		if (parentNode->parentNode != NULL && parentNode->parentNode->leftNode == parentNode) {
 			sibling = parentNode->parentNode->rightNode;
 			sibling->parentNode = parentNode->parentNode;
+			parentNode->parentNode->rightNode = sibling;
 		}
 		// grandparent의 오른쪽 자식이 부모노드일 경우. 형제는 왼쪽 자식.
-		else if (parentNode->parentNode->rightNode == parentNode) {
+		else if (parentNode->parentNode != NULL && parentNode->parentNode->rightNode == parentNode) {
 			sibling = parentNode->parentNode->leftNode;
 			sibling->parentNode = parentNode->parentNode;
+			parentNode->parentNode->leftNode = sibling;
 		}
 		return sibling;
 	}
@@ -280,12 +270,14 @@ private:
 	Node* getNodeUsing(int id) {
 		Node* curNode = root;
 		Node* getNode = NULL;
-		while (curNode->app != NULL) {
-			getNode = curNode;
-			if (curNode->app->id == id) return getNode;
-			else if (curNode->app->id > id)
-				curNode = curNode->leftNode;
-			else curNode = curNode->rightNode;
+		if (curNode != NULL) {
+			while (curNode->app != NULL) { 
+				getNode = curNode;
+				if (curNode->app->id == id) return getNode;
+				else if (curNode->app->id > id)
+					curNode = curNode->leftNode;
+				else curNode = curNode->rightNode;
+			}
 		}
 		getNode = NULL;
 		return getNode;
@@ -301,8 +293,9 @@ public:
 		Node* saveNewNode = newNode;
 		bool isDuplicate = false;
 		if (root == NULL) {
+			newNode->parentNode = NULL;
 			root = newNode;
-			setRootColor();
+			root->color = Color::BLACK;
 		}
 		else {
 			Node* curNode = root;
@@ -310,10 +303,9 @@ public:
 			Node* toParentNode = curNode;
 			// newNode를 집어넣을 parentNode를 찾는다.
 			// Except NIL 
-			while (curNode->app != NULL) {
+			while (curNode != NULL && curNode->app != NULL) {
 				toParentNode = curNode;
 				if (curNode->app->id == newNode->app->id) {
-					cout << "duplicated" << "\n";
 					isDuplicate = true;
 					break;
 				}
@@ -323,28 +315,33 @@ public:
 					curNode = curNode->rightNode;
 				}
 			}
-			// save new id smaller than parent Id 
-			if (toParentNode->app->id > newNode->app->id) {
-				toParentNode->leftNode = newNode;
-				newNode->parentNode = toParentNode;
-			}
-			// save new id larger than parent id
-			else {
-				toParentNode->rightNode = newNode;
-				newNode->parentNode = toParentNode;
-			}
-			// check double red
-			while (isDoubleRed(toParentNode, newNode) && !isDuplicate) {
-				// get sibling node
-				Node* siblingNode = getSibling(toParentNode);
-				if (isSiblingRed(siblingNode)) recoloring(toParentNode->parentNode, toParentNode, siblingNode);
-				else restructuring(toParentNode->parentNode, toParentNode, newNode);
-				// double red 처리 후에도 double red가 발생했는지 알기 위해 비교 노드를 바꿔준다.
-				if (getNodeDepth(toParentNode->parentNode) >= 2) {
-					// newNode = grandParentNode
-					newNode = getNodeUsing(toParentNode->parentNode->app->id);
-					// toParentNode = grandParentNode parent
-					toParentNode = getNodeUsing(toParentNode->parentNode->parentNode->app->id);
+			if (!isDuplicate) {
+				// save new id smaller than parent Id 
+				if (toParentNode->app->id > newNode->app->id) {
+					newNode->parentNode = toParentNode;
+					toParentNode->leftNode = newNode;
+				}
+				// save new id larger than parent id
+				else {
+					newNode->parentNode = toParentNode;
+					toParentNode->rightNode = newNode;
+				}
+				// check double red
+				while (isDoubleRed(toParentNode, newNode)) {
+					// get sibling node
+					Node* siblingNode = getSibling(toParentNode);
+					Node* subtreeRoot = nullptr;
+					if (isSiblingRed(siblingNode))
+						subtreeRoot = getSubtreeRootAfterRecoloring(toParentNode->parentNode, toParentNode, siblingNode);
+					else
+						subtreeRoot = getSubtreeRootAfterRestructuring(toParentNode->parentNode, toParentNode, newNode);
+					// double red 처리 후에도 double red가 발생했는지 알기 위해 비교 노드를 바꿔준다.
+					if (getNodeDepth(subtreeRoot) >= 2) {
+						// newNode = subtreeRoot
+						newNode = subtreeRoot;
+						// toParentNode = subtreeRoot parent
+						toParentNode = subtreeRoot->parentNode;
+					}
 				}
 			}
 		}
@@ -369,13 +366,13 @@ public:
 		}
 	}
 	// 범위 안에 있는 App의 가격을 할인.
-	void discountAppBetweenByPercent(int startId, int endId, int p) {
+	void discountAppBetweenByPercent(int startId, int endId, double p) {
 		if (root != NULL)
 			discountApp(root, startId, endId, p);
 	}
 
 	// print tree for test.
-// if finish project then delete it.
+	// if finish project then delete it.
 	void inOrderPrint(Node* curNode) {
 		if (curNode->app != NULL) {
 			inOrderPrint(curNode->leftNode);
@@ -399,6 +396,7 @@ int main() {
 			int id, size, price; string name;
 			cin >> id >> name >> size >> price;
 			rbt.insertAppInNode(new App(id, name, size, price));
+			//rbt.inOrder();
 		}
 		// 애플리케이션 검색
 		else if (cmd == "F") {
@@ -413,7 +411,7 @@ int main() {
 		}
 		// 애플리케이션 할인
 		else if (cmd == "D") {
-			int x, y, P; cin >> x >> y >> P;
+			int x, y; double P; cin >> x >> y >> P;
 			rbt.discountAppBetweenByPercent(x, y, P);
 		}
 	}
