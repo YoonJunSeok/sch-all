@@ -25,13 +25,14 @@ void checkHaveToChangeRow(vector<vector<double>>& matrix, int checkRow) {
 // operation 2
 void rowMultipledByNum(vector<double>& matrix, double multipleNum) {
 	for (int col = 0; col < matrixNSize; col++) {
-		matrix[col] *= multipleNum;
+		matrix[col] = matrix[col] * multipleNum;
 	}
 }
 // operation 3
 void rowAddedRow(vector<double> &matrix, vector<double> &matrixPlus) {
 	for (int col = 0; col < matrixNSize; col++) {
-		matrix[col] += matrixPlus[col];
+		matrix[col] = round((matrix[col] + matrixPlus[col])*10)/ 10;
+		if (matrix[col] == 0) matrix[col] = abs(matrix[col]);
 	}
 }
 // get gcd
@@ -61,6 +62,9 @@ bool checkUpperTriangle(vector<vector<double>> &matrix) {
 bool checkDifferentSign(int a, int b) {
 	if ((a > 0 && b < 0) || (a < 0 && b > 0)) return true;
 	else return false;
+}
+bool checkMultipleNumZero(int num) {
+	return num == 0;
 }
 // Print matrix
 void printMatrix(vector<vector<double>> &matrix) {
@@ -93,20 +97,32 @@ int main() {
 			vector<double> multipleSaveRow = matrix[row];
 			int LCM = lcm(abs(matrix[row][col]), abs(matrix[col][col]));
 			int GCD = gcd(abs(matrix[row][col]), abs(matrix[col][col]));
-			rowMultipledByNum(matrix[row], matrix[col][col] / (double)LCM);
+			if (LCM == 0) break;
+			if (checkMultipleNumZero(matrix[col][col])) {
+				multipleNum = 0;
+			}
+			else multipleNum = matrix[col][col] / (double)LCM;
+			rowMultipledByNum(matrix[row], multipleNum);
 			if (!checkDifferentSign(multipleSaveRow[col], matrix[col][col]))
 				LCM *= -1;
-			rowMultipledByNum(matrix[col], multipleSaveRow[col] / (double)LCM);
+			if (checkMultipleNumZero(matrix[col][col])) {
+				multipleNum = 0;
+			}
+			else multipleNum = multipleSaveRow[col] / (double)LCM;
+			rowMultipledByNum(matrix[col], multipleNum);
 			rowAddedRow(matrix[row], matrix[col]);
 			matrix[col] = save;
 		}
+		// test print matrix
 		printMatrix(matrix);
+		// check uppder triangluar matrix
 		if (checkUpperTriangle(matrix)) {
 			upperTriangle = true;
 			break;
 		}
 		else upperTriangle = false;
 	}
+	// real print
 	if (upperTriangle) printMatrix(matrix);
 	else cout << "Can not chage upper triangle form" << "\n";
 }
