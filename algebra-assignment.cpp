@@ -23,7 +23,7 @@ void checkHaveToChangeRow(vector<vector<double>>& matrix, int checkRow) {
 	}
 }
 // operation 2
-void rowMultipledByNum(vector<double>& matrix, int multipleNum) {
+void rowMultipledByNum(vector<double>& matrix, double multipleNum) {
 	for (int col = 0; col < matrixNSize; col++) {
 		matrix[col] *= multipleNum;
 	}
@@ -67,7 +67,7 @@ void printMatrix(vector<vector<double>> &matrix) {
 	for (int i = 0; i < matrixNSize; i++) {
 		for (int j = 0; j < matrixNSize; j++) {
 			cout << fixed;
-			cout.precision(10);
+			cout.precision(1);
 			cout << matrix[i][j] << " ";
 		}
 		cout << "\n";
@@ -88,13 +88,15 @@ int main() {
 	for (int row = 1; row < matrixNSize; row++) {
 		checkHaveToChangeRow(matrix, row);
 		for (int col = 0; col < row; col++) {
+			double multipleNum = 0.0;
 			vector<double> save = matrix[col];
+			vector<double> multipleSaveRow = matrix[row];
 			int LCM = lcm(abs(matrix[row][col]), abs(matrix[col][col]));
 			int GCD = gcd(abs(matrix[row][col]), abs(matrix[col][col]));
-			rowMultipledByNum(matrix[row], LCM / matrix[row][col]);
-			if (!checkDifferentSign(matrix[row][col], matrix[col][col]))
+			rowMultipledByNum(matrix[row], matrix[col][col] / (double)LCM);
+			if (!checkDifferentSign(multipleSaveRow[col], matrix[col][col]))
 				LCM *= -1;
-			rowMultipledByNum(matrix[col], LCM / matrix[col][col]);
+			rowMultipledByNum(matrix[col], multipleSaveRow[col] / (double)LCM);
 			rowAddedRow(matrix[row], matrix[col]);
 			matrix[col] = save;
 		}
