@@ -2,14 +2,28 @@
 #include<vector>
 using namespace std;
 int matrixNSize;
+bool isOverflow = false;
+// check overflow
+bool checkOverflow(long long num1, long long num2) {
+	long long result = num1 * num2;
+	if ((result / num1) != num2) {
+		isOverflow = true;
+		return true;
+	}
+	else return false;
+}
 void operationOne(vector<vector<long long>> &matrix, int row1, int row2) {
 	vector<long long> tmpMatrix = matrix[row1];
 	matrix[row1] = matrix[row2];
 	matrix[row2] = tmpMatrix;
 }
-void operationTwo(vector<long long>& matrix, int num) {
+void operationTwo(vector<long long>& matrix, long long num) {
 	for (int col = 0; col < matrixNSize; col++) {
-		matrix[col] *= num;
+		if (matrix[col] != 0) {
+			if (!checkOverflow(abs(matrix[col]), abs(num))) {
+				matrix[col] *= num;
+			}
+		}
 	}
 }
 void operationThree(vector<vector<long long>>& matrix, int row1, int row2) {
@@ -25,27 +39,31 @@ long long gcd(long long a, long long b) {
 	return a;
 }
 long long lcm(long long a, long long b) {
-	return (a * b) / gcd(a, b);
+	if (!checkOverflow(a, b))
+		return (a * b) / gcd(a, b);
+	else return 1;
 }
 // 해당 행 전체에 해당하는 GCD를 구해 나눠준다.
 void setNumMatrixDivideByGcd(vector<long long>& matrix, int nonZeroCol) {
 	int GCD = matrix[nonZeroCol];
-	for (int col = nonZeroCol + 1; col < matrixNSize; col++)
+	for (int col = nonZeroCol+1; col < matrixNSize; col++)
 		GCD = gcd(GCD, abs(matrix[col]));
 	for (int col = nonZeroCol; col < matrixNSize; col++)
 		matrix[col] /= GCD;
 }
 // upper triangle을 만족하는 형태로 만들어준다.
 void setUpperTriangle(vector<vector<long long>>& matrix) {
-	int nonZeroCol = 0;
 	vector<int> alreadyRow(matrixNSize+1, 0);
 	for (int row = 0; row < matrixNSize; row++) {
+		int nonZeroCol = -1;
 		int zeroCnt = 0;
 		for (int col = 0; col < matrixNSize; col++) {
 			if (matrix[row][col] == 0) zeroCnt++;
 			else {
-				nonZeroCol = col;
-				break;
+				if (row != 0) {
+					nonZeroCol = col;
+					break;
+				}
 			}
 		}
 		if (zeroCnt >= matrixNSize) zeroCnt = matrixNSize - 1;
@@ -54,7 +72,8 @@ void setUpperTriangle(vector<vector<long long>>& matrix) {
 			alreadyRow.at(zeroCnt) = 1;
 		}
 		// 식을 간략화 하기 위해 GCD로 나눠준다.
-		setNumMatrixDivideByGcd(matrix[row], nonZeroCol);
+		if (nonZeroCol != -1)
+			setNumMatrixDivideByGcd(matrix[row], nonZeroCol);
 	}
 }
 
@@ -76,6 +95,7 @@ bool checkDifferentSign(long long a, long long b) {
 }
 // print matrix
 void printMatrix(vector<vector<long long>>& matrix) {
+	cout << "\n";
 	for (int i = 0; i < matrixNSize; i++) {
 		for (int j = 0; j < matrixNSize; j++) {
 			cout << matrix[i][j] << " ";
@@ -133,10 +153,15 @@ int main() {
 				// 변경했으므로 upper triangle 형태로 만든다.
 				setUpperTriangle(matrix);
 			}
+		}
+		if (isOverflow) break;
+	}
+	if (isOverflow) 
+		cout << "\n사용중인 자료형의 범위를 넘어간 계산입니다." << "\n";
+	else {
+		if (checkUpperTriangle(matrix)) {
 			printMatrix(matrix);
 		}
+		else cout << "Fail" << "\n";
 	}
-	if (checkUpperTriangle(matrix)) 
-		cout << "Success" << "\n";
-	else cout << "Fail" << "\n";
 }
