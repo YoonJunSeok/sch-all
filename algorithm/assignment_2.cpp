@@ -8,13 +8,17 @@ using namespace std;
 vector<pair<int, int>> vertex[MAX_SIZE];
 // vector number 저장
 vector<int> vertexNumber;
-
 class PriorityQueue {
 public: 
 	// vertexNumber와 weight 보유.
 	pair<int, int> minHeap[MAX_SIZE];
-	int heapSize = 0;
-	//int minHeap[MAX_SIZE];
+	int heapSize;
+
+	PriorityQueue() {
+		pair<int, int> p = { 0,0 };
+		fill(minHeap, minHeap + MAX_SIZE, p);
+		heapSize = 0;
+	}
 
 	void swap(int x, int y) {
 		int tmpVertex = minHeap[x].first;
@@ -31,71 +35,70 @@ public:
 		minHeap[heapSize].first = info.first;
 		// stroe edge weight
 		minHeap[heapSize].second = info.second;
+		for (int i = 1; i < heapSize; i++) {
+			// same vertex, different weight
+			if (minHeap[i].first == minHeap[heapSize].first) {
+				if (minHeap[i].second > minHeap[heapSize].second) {
+					swap(i, heapSize);
+					minHeap[heapSize].first = 0;
+					minHeap[heapSize].second = 0;
+					heapSize--;
+				}
+				else {
+					minHeap[heapSize].first = 0;
+					minHeap[heapSize].second = 0;
+					heapSize--;
+				}
+			}
+		}
 		for (int i = heapSize; i > 1; i /= 2) {
 			if (minHeap[i / 2].second > minHeap[i].second)
 				swap(i / 2, i);
-			else break;
+			else if (minHeap[i/2].second < minHeap[i].second)
+				break;
+			else if (minHeap[i/2].second == minHeap[i].second) {
+				// same weight, small vertex over big vertex
+				if (minHeap[i/2].first > minHeap[i].first) {
+					swap(i/2, i);
+				}
+			}
+		}
+		update();
+	}
+
+	void pop() {
+		if (heapSize != 0) {
+			// 최소와 최대의 자리를 바꾼다.
+			swap(1, heapSize);
+			// 최소를 가져왔으므로 최소의 자리를 삭제한다.
+			minHeap[heapSize].first = 0;
+			minHeap[heapSize].second = 0;
+			heapSize--;
+			update();
 		}
 	}
 
-	int popMinValue() {
-		if (heapSize == 0) return 0;
-		int minWeight = minHeap[1].second;
-		// 최소와 최대의 자리를 바꾼다.
-		swap(1, heapSize);
-		// 최소를 가져왔으므로 최소의 자리를 삭제한다.
-		minHeap[heapSize].first = 0;
-		minHeap[heapSize].second = 0;
-		heapSize--;
+	void update() {
 		// 최대의 자리를 min heap에 맞게 변경한다.
 		for (int i = 1; i * 2 <= heapSize; i++) {
-			if (minHeap[i].second < minHeap[i * 2].second && minHeap[i].second < minHeap[i * 2 + 1].second) break;
-			else if (minHeap[i * 2].second < minHeap[i * 2 + 1].second) {
-				swap(i, i * 2);
-				i = i * 2;
-			}
-			else {
-				swap(i, i * 2 + 1);
-				i = i * 2 + 1;
+			if (minHeap[i * 2 + 1].first != 0) {
+				if (minHeap[i].second < minHeap[i * 2].second && minHeap[i].second < minHeap[i * 2 + 1].second) break;
+				else if (minHeap[i * 2].second < minHeap[i * 2 + 1].second) {
+					swap(i, i * 2);
+					i = i * 2;
+				}
+				else if (minHeap[i * 2].second > minHeap[i * 2 + 1].second) {
+					swap(i, i * 2 + 1);
+					i = i * 2 + 1;
+				}
+				else if (minHeap[i * 2].second == minHeap[i * 2 + 1].second) {
+					if (minHeap[i * 2].first > minHeap[i * 2 + 1].first)
+						swap(i, i * 2 + 1);
+					else swap(i, i * 2);
+				}
 			}
 		}
-		return minWeight;
 	}
-
-	//void swap(int x, int y) {
-	//	int tmp = minHeap[x];
-	//	minHeap[x] = minHeap[y];
-	//	minHeap[y] = tmp;
-	//}
-	//void push(int data) {
-	//	minHeap[++heapSize] = data;
-	//	for (int i = heapSize; i > 1; i /= 2) {
-	//		if (minHeap[i / 2] > minHeap[i]) {
-	//			swap(i / 2, i);
-	//		}
-	//		else break;
-	//	}
-	//}
-
-	//int popMinValue() {
-	//	if (heapSize == 0) return 0;
-	//	int min = minHeap[1];
-	//	minHeap[1] = minHeap[heapSize];
-	//	minHeap[heapSize--] = 0;
-
-	//	for (int i = 1; i * 2 <= heapSize; i++) {
-	//		if (minHeap[i] < minHeap[i * 2] && minHeap[i] < minHeap[i * 2 + 1]) break;
-	//		else if (minHeap[i * 2] < minHeap[i * 2 + 1]) {
-	//			swap(i, i * 2);
-	//			i = i * 2;
-	//		}
-	//		else {
-	//			swap(i, i * 2 + 1);
-	//			i = i * 2 + 1;
-	//		}
-	//	}
-	//	return min;
-	//}
 
 	bool empty() {
 		if (heapSize == 0) return true;
@@ -106,8 +109,8 @@ public:
 		return minHeap[1];
 	}
 };
-bool check[MAX_SIZE];
 void prim(PriorityQueue pq, int startVertex) {
+	bool check[MAX_SIZE] = { false, };
 	// start vertex is tree
 	// if cehck[vertexNumber] = false then fringe.
 	check[startVertex] = true;
@@ -117,12 +120,19 @@ void prim(PriorityQueue pq, int startVertex) {
 		pq.push(make_pair(vertex[startVertex][i].first, vertex[startVertex][i].second));
 		check[vertex[startVertex][i].first] = false;
 	}
+	vertexNumber.push_back(startVertex);
+
 	while (!pq.empty()) {
 		pair<int, int> p = pq.top();
-		pq.popMinValue();
+		pq.pop();
 		if (!check[p.first]) {
 			check[p.first] = true;
 			sumMinWeight += p.second;
+
+			for (int j = 0; j < vertex[p.first].size(); j++) {
+				if (!check[vertex[p.first][j].first])
+					pq.push(make_pair(vertex[p.first][j].first, vertex[p.first][j].second));
+			}
 
 			// 최소의 weight 값과 vertex number 값을 가져온다.
 			vertexNumber.push_back(p.first);
@@ -146,6 +156,7 @@ int main() {
 	}
 	for (int i = 0; i < questionCnt; i++) {
 		PriorityQueue pq;
+		vertexNumber.clear();
 		char cmd; cin >> cmd;
 		if (cmd == 'P') {
 			int startVertex; cin >> startVertex;
