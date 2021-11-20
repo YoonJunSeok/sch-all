@@ -1,19 +1,34 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#define MAX_SIZE 10000
+#define MAX_SIZE 10001
 using namespace std;
 vector<pair<int, int>> adj[MAX_SIZE];
 vector<int> vertexNumber;
+class Edge {
+public:
+	int destination;
+	int weight;
+
+	Edge(int destination, int weight) {
+		this->destination = destination;
+		this->weight = weight;
+	}
+
+	Edge() {
+		this->destination = 0;
+		this->weight = 0;
+	}
+};
 class PriorityQueue {
-public: 
+public:
 	// vertexNumber와 weight 보유.
-	pair<int, int> minHeap[MAX_SIZE];
+
+	pair<int, int>* minHeap;
 	int heapSize;
 
 	PriorityQueue() {
-		pair<int, int> p = { 0,0 };
-		fill(minHeap, minHeap + MAX_SIZE, p);
+		this->minHeap = new pair<int, int>[MAX_SIZE];
 		heapSize = 0;
 	}
 
@@ -55,7 +70,7 @@ public:
 				break;
 			}
 		}
-		if(!sameVertex)
+		if (!sameVertex)
 			updateUp(heapSize);
 	}
 
@@ -137,7 +152,7 @@ public:
 		else return false;
 	}
 
-	pair<int,int> top() {
+	pair<int, int> top() {
 		return minHeap[1];
 	}
 };
@@ -189,5 +204,6 @@ int main() {
 			int startVertex; cin >> startVertex;
 			prim(pq, startVertex);
 		}
+		delete pq.minHeap;
 	}
 }
