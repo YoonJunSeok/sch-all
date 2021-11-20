@@ -5,21 +5,6 @@
 using namespace std;
 vector<pair<int, int>> adj[MAX_SIZE];
 vector<int> vertexNumber;
-class Edge {
-public:
-	int destination;
-	int weight;
-
-	Edge(int destination, int weight) {
-		this->destination = destination;
-		this->weight = weight;
-	}
-
-	Edge() {
-		this->destination = 0;
-		this->weight = 0;
-	}
-};
 class PriorityQueue {
 public:
 	// vertexNumber와 weight 보유.
