@@ -34,11 +34,9 @@ public:
 		bool sameVertex = false;
 		for (int i = 1; i < heapSize; i++) {
 			// 새로 들어온 간선과 기존에 있는 간선이 겹치는지 확인.
-			// same vertex
 			if (minHeap[i].first == minHeap[heapSize].first) {
 				sameVertex = true;
-				// old weight > new weight
-				// 새로운 간선으로 교체한 후 기존 간선은 삭제한다.
+				// 새로운 정점의 가중치가 기존 정점의 가중치보다 작은 경우. 기존 정점과 교체.
 				if (minHeap[i].second > minHeap[heapSize].second) {
 					swap(i, heapSize);
 					minHeap[heapSize].first = 0;
@@ -46,7 +44,7 @@ public:
 					heapSize--;
 					updateUp(i);
 				}
-				// 기존 간선을 유지하고 새로운 간선은 삭제한다.
+				// 새로운 정점의 가중치가 기존 정점의 가중치보다 크거나 같은 경우. 새로운 정점 삭제.
 				else {
 					minHeap[heapSize].first = 0;
 					minHeap[heapSize].second = 0;
@@ -77,32 +75,75 @@ public:
 		int cur = 1;
 		int leftChild = cur * 2;
 		int rightChild = cur * 2 + 1;
-		// 자식이 2명인 경우.
-		while (minHeap[leftChild].first != 0 && minHeap[rightChild].first != 0) {
-			if (minHeap[leftChild].second <= minHeap[rightChild].second) {
-				if (minHeap[cur].second > minHeap[leftChild].second) {
-					swap(leftChild, cur);
-					cur = leftChild;
-				}
-				else break;
-			}
-			else {
-				if (minHeap[cur].second > minHeap[rightChild].second) {
-					swap(rightChild, cur);
+		while (1) {
+			// 자식이 2명일 때.
+			if (rightChild <= heapSize) {
+				// 현재 정점의 가중치가 모든 자식들의 가중치보다 작은 경우. break
+				if (minHeap[cur].second < minHeap[leftChild].second && minHeap[cur].second < minHeap[rightChild].second) break;
+				// 현재 정점의 가중치가 왼쪽 자식보다 작고 오른쪽 자식보다 큰 경우.
+				else if (minHeap[cur].second < minHeap[leftChild].second && minHeap[cur].second > minHeap[rightChild].second) {
+					swap(cur, rightChild);
 					cur = rightChild;
 				}
-				else break;
+				// 현재 정점의 가중치가 왼쪽 자식보다 크고 오른쪽 자식보다 작은 경우.
+				else if (minHeap[cur].second > minHeap[leftChild].second && minHeap[cur].second < minHeap[rightChild].second) {
+					swap(cur, leftChild);
+					cur = leftChild;
+				}
+				// 현재 정점의 가중치가 모든 자식들의 가중치보다 큰 경우.
+				else {
+					// 왼쪽 자식의 가중치가 오른쪽 자식의 가중치보다 작은 경우.
+					if (minHeap[leftChild].second < minHeap[rightChild].second) {
+						swap(cur, leftChild);
+						cur = leftChild;
+					}
+					// 왼쪽 자식의 가중치가 오른쪽 자식의 가중치보다 큰 경우.
+					else if (minHeap[leftChild].second > minHeap[rightChild].second) {
+						swap(cur, rightChild);
+						cur = rightChild;
+					}
+					// 왼쪽 자식의 가중치가 오른쪽 자식의 가중치와 같은 경우.
+					else {
+						// 왼쪽 자식의 정점이 오른쪽 자식의 정점보다 작은 경우.
+						if (minHeap[leftChild].first < minHeap[rightChild].first) {
+							swap(cur, leftChild);
+							cur = leftChild;
+						}
+						// 왼쪽 자식의 정점이 오른쪽 자식의 정점보다 큰 경우.
+						else if (minHeap[leftChild].first > minHeap[rightChild].first) {
+							swap(cur, rightChild);
+							cur = rightChild;
+						}
+						// 자식들의 정점이 같은 경우는 push 할 때 이미 처리했기에 나올 수 없다.
+					}
+				}
+				leftChild = cur * 2;
+				rightChild = cur * 2 + 1;
 			}
-			leftChild = cur * 2;
-			rightChild = cur * 2 + 1;
-		}
-		while (minHeap[leftChild].first != 0) {
-			if (minHeap[cur].second > minHeap[leftChild].second) {
-				swap(leftChild, cur);
-				cur = leftChild;
+			// 자식이 1명일 때.
+			else if (leftChild <= heapSize) {
+				// 현재 정점의 가중치가 자식의 가중치보다 작은 경우. break
+				if (minHeap[cur].second < minHeap[leftChild].second) break;
+				// 현재 정점의 가중치가 자식의 가중치보다 큰 경우
+				else if (minHeap[cur].second > minHeap[leftChild].second) {
+					swap(cur, leftChild);
+					cur = leftChild;
+				}
+				// 현재 정점의 가중치가 자식의 가중치와 같은 경우. 정점 우선순위 비교.
+				else {
+					// 현재 정점이 자식의 정점보다 작은 경우. break
+					if (minHeap[cur].first < minHeap[leftChild].first) break;
+					// 현재 정점이 자식의 정점보다 큰 경우.
+					else if (minHeap[cur].first > minHeap[leftChild].first) {
+						swap(cur, leftChild);
+						cur = leftChild;
+					}
+					// 현재 정점과 자식의 정점이 같은 경우는 push에서 예외처리했기에 나올 수 없다.
+				}
+				leftChild = cur * 2;
 			}
+			// 정점이 없거나 
 			else break;
-			leftChild = cur * 2;
 		}
 	}
 
@@ -112,22 +153,27 @@ public:
 		int parent = cur / 2;
 		while (parent >= 1) {
 			// 일반적인 경우.
-			// 현재 weight이 부모 weight보다 낮은 경우.
+			// 현재 weight이 부모 weight보다 작은 경우.
 			if (minHeap[cur].second < minHeap[parent].second) {
 				swap(cur, parent);
 				cur = parent;
 				parent = cur / 2;
 			}
 			// 특별한 경우.
-			// 현재 weight과 부모 weight이 같지만 정점의 우선순위가 현재 정점이 높은 경우.
+			// 현재 weight과 부모 weight이 같은 경우.
 			else if (minHeap[cur].second == minHeap[parent].second) {
+				//정점의 우선순위가 현재 정점이 높은 경우.
 				if (minHeap[cur].first < minHeap[parent].first) {
 					swap(cur, parent);
 					cur = parent;
 					parent = cur / 2;
 				}
+				//정점의 우선순위가 현재 정점이 낮거나 같은 경우.
+				// 낮은 경우는 교체할 필요가 없고
+				// 가중치와 정점이 모두 같은 경우는 push하면서 이미 고려한 경우이므로 나올 수 없다.
 				else break;
 			}
+			// 현재 weight이 부모 weight 보다 큰 경우. break
 			else break;
 		}
 	}
