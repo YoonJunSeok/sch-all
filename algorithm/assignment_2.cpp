@@ -3,6 +3,8 @@
 #include <algorithm>
 #define MAX_SIZE 10001
 using namespace std;
+// adjacency list
+// adj[1] = {3,40} : 1번 시작지점은 3번으로 가는 40가중치의 간선을 가지고 있다는 의미.
 vector<pair<int, int>> adj[MAX_SIZE];
 // min heap 기반 priority queue.
 class PriorityQueue {
@@ -20,7 +22,7 @@ public:
 		delete[] minHeap;
 	}
 
-	// heap에 들어있는 정점들의 위치를 서로 바꾸기 위한 함수.
+	// heap에 들어있는 정점들의 위치를 서로 바꾸기 위한 함수. O(1)
 	void swap(int x, int y) {
 		int tmpVertex = minHeap[x].first;
 		int tmpWeight = minHeap[x].second;
@@ -37,6 +39,7 @@ public:
 		minHeap[heapSize].first = info.first;
 		minHeap[heapSize].second = info.second;
 		// 새로운 간선 정보의 목적지 정점이 이미 있는 정점인지 확인.
+		// 최대 n만큼 탐색. O(n)
 		bool sameVertex = false;
 		for (int i = 1; i < heapSize; i++) {
 			// 동일한 정점이 있는 경우.
@@ -61,6 +64,7 @@ public:
 			}
 		}
 		// 중복된 정점이 없는 경우.
+		// O(logN)
 		if (!sameVertex)
 			updateUp(heapSize);
 	}
@@ -68,17 +72,18 @@ public:
 	// heap에서 가장 높은 우선순위를 제거한다.
 	void pop() {
 		if (heapSize != 0) {
-			// 가장 높은 우선순위와 낮은 우선순위의 자리를 바꾸고 삭제한다.
+			// 가장 높은 우선순위와 낮은 우선순위의 자리를 바꾸고 삭제한다. O(1)
 			swap(1, heapSize);
 			minHeap[heapSize].first = 0;
 			minHeap[heapSize].second = 0;
 			heapSize--;
-			// 가장 낮은 우선순위가 가장 높은 우선순위 자리에 있으므로 올바른 자리를 찾아준다.
+			// 가장 낮은 우선순위가 가장 높은 우선순위 자리에 있으므로 올바른 자리를 찾아준다. O(logN)
 			updateDown();
 		}
 	}
 
 	// 가장 낮은 우선순위가 가장 높은 우선순위 자리에 있을 때 올바른 자리를 찾아주는 함수.
+	// 자식과 부모간 비교 O(logN)
 	// pop할 때 사용.
 	void updateDown() {
 		int cur = 1;
@@ -182,6 +187,7 @@ public:
 	}
 
 	// 해당 정점부터 가장 높은 우선순위의 자리까지 올라가며 올바른 자리 탐색.
+	// 자식과 부모간 비교이기에 O(logN)
 	// push할 때 사용.
 	void updateUp(int cur) {
 		int parent = cur / 2;
@@ -221,24 +227,27 @@ public:
 		return minHeap[1];
 	}
 };
+
 void prim(int startVertex) {
 	// tree 상태의 정점을 순서대로 저장하기 위한 벡터.
 	vector<int> vertexNumber;
-	// min heap을 이용해 프림 알고리즘 수행.
+	// heap을 이용해 만든 우선순위큐로 프림 알고리즘 수행.
 	PriorityQueue pq;
+	// tree 상태인지 fringe 상태인지 확인하는 배열.
 	// tree 상태에 들어있지 않은 정점들은 false
 	// tree 상태에 들어있으면 true
 	bool check[MAX_SIZE] = { false, };
 	check[startVertex] = true;
 	int sumMinWeight = 0;
 	// base case
-	// 처음 정점과 연결된 정보들을 인접 리스트에서 가져와 heap에 저장한다.
+	// 처음 정점과 연결된 정보들을 인접 리스트에서 가져와 우선순위 큐에 저장한다.
 	for (int i = 0; i < adj[startVertex].size(); i++) {
 		pq.push(make_pair(adj[startVertex][i].first, adj[startVertex][i].second));
 	}
 	// tree 상태의 정점을 저장.
 	vertexNumber.push_back(startVertex);
 
+	// 최대 O(n^2)
 	while (!pq.empty()) {
 		// 가장 높은 우선순위, 가장 낮은 가중치를 가진 정보를 가져온다.
 		pair<int, int> p = pq.top();
