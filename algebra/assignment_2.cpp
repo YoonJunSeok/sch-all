@@ -126,24 +126,12 @@ void calEigenVector(matrix& mat) {
 		}
 		equation.clear();
 	}
-	cnt--;
-	if (cnt == -1) {
-		for (int i = 3; i >= 0; i--) {
-			for (int j = 0; j < 4; j++)
-				cout << eigenVector[i][j] << " ";
-			cout << "\n";
-		}
-		cout << "\n";
-	}
 }
 void calCoordinate(matrix& mat, double* input,double* coordinate) {
 	double transmition[4][4];
 	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
+		for (int j = 0; j < 4; j++)
 			transmition[i][j] = eigenVector[3-j][i];
-			cout << transmition[i][j] << " ";
-		}
-		cout << "\n";
 	}
 	for (int i = 3; i >= 0; i--) {
 		double sum = 0;
@@ -153,17 +141,16 @@ void calCoordinate(matrix& mat, double* input,double* coordinate) {
 		sum -= coordinate[i];
 		coordinate[i] = input[i] - sum;
 	}
-	for (int i = 0; i < 4; i++) {
-		cout << coordinate[i] << " ";
-	}
-	cout << "\n";
 }
-// print
-void printAMinus() {
+void fastCal(double* coordinate, int k) {
+	double solution[4] = { 0,0,0,0 };
 	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++)
-			cout << AMinusRamdaIdentity[i][j] << " ";
-		cout << "\n";
+		for (int j = 0; j < 4; j++) {
+			 solution[j] += coordinate[i] * pow(ramda[i], k) * eigenVector[i][j];
+		}
+	}
+	for (int i = 0; i < 4; i++) {
+		cout << solution[i] << " ";
 	}
 	cout << "\n";
 }
@@ -181,9 +168,9 @@ int main() {
 		// 1은 임의의 실수값을 의미한다.
 		setAMinusRamdaIdentity(ramda[i]);
 		rowEchelon(AMinusRamdaIdentity);
-		printAMinus();
 		calEigenVector(AMinusRamdaIdentity);
 	}
 	double coordinate[4] = { 1, 1, 1, 1 };
 	calCoordinate(AMinusRamdaIdentity, input, coordinate);
+	fastCal(coordinate, k);
 }
