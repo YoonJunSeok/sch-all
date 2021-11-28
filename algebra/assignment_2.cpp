@@ -136,6 +136,28 @@ void calEigenVector(matrix& mat) {
 		cout << "\n";
 	}
 }
+void calCoordinate(matrix& mat, double* input,double* coordinate) {
+	double transmition[4][4];
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			transmition[i][j] = eigenVector[3-j][i];
+			cout << transmition[i][j] << " ";
+		}
+		cout << "\n";
+	}
+	for (int i = 3; i >= 0; i--) {
+		double sum = 0;
+		for (int j = 0; j < 4; j++) {
+			sum += coordinate[j] * transmition[i][j];
+		}
+		sum -= coordinate[i];
+		coordinate[i] = input[i] - sum;
+	}
+	for (int i = 0; i < 4; i++) {
+		cout << coordinate[i] << " ";
+	}
+	cout << "\n";
+}
 // print
 void printAMinus() {
 	for (int i = 0; i < 4; i++) {
@@ -162,4 +184,6 @@ int main() {
 		printAMinus();
 		calEigenVector(AMinusRamdaIdentity);
 	}
+	double coordinate[4] = { 1, 1, 1, 1 };
+	calCoordinate(AMinusRamdaIdentity, input, coordinate);
 }
